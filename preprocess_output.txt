@@ -1,0 +1,51 @@
+找到CSV文件: data\skill_builder_data_corrected_collapsed.csv
+正在加载数据: data\skill_builder_data_corrected_collapsed.csv
+成功使用编码: latin-1
+
+数据列: ['Unnamed: 0', 'order_id', 'assignment_id', 'user_id', 'assistment_id', 'problem_id', 'original', 'correct', 'attempt_count', 'ms_first_response', 'tutor_mode', 'answer_type', 'sequence_id', 'student_class_id', 'position', 'type', 'base_sequence_id', 'skill_id', 'skill_name', 'teacher_id', 'school_id', 'hint_count', 'hint_total', 'overlap_time', 'template_id', 'answer_id', 'answer_text', 'first_action', 'bottom_hint', 'opportunity', 'opportunity_original']
+数据形状: (346860, 31)
+前5行:
+   Unnamed: 0  order_id  ...  opportunity  opportunity_original
+0           1  33022537  ...            1                   1.0
+1           2  33022709  ...            2                   2.0
+2           3  35450204  ...            1                   1.0
+3           4  35450295  ...            2                   2.0
+4           5  35450311  ...            3                   3.0
+
+[5 rows x 31 columns]
+
+识别的列:
+  用户列: user_id
+  题目列: problem_id
+  技能列: skill_id
+  正确性列: correct
+  时间列: ms_first_response
+
+数据统计:
+  用户数: 4217
+  题目数: 26688
+  技能数: 150
+  总记录数: 346860
+格式化数据:   0%|          | 0/4217 [00:00<?, ?it/s]格式化数据:   3%|▎         | 142/4217 [00:00<00:02, 1417.21it/s]格式化数据:   8%|▊         | 336/4217 [00:00<00:02, 1721.24it/s]格式化数据:  14%|█▍        | 585/4217 [00:00<00:01, 2065.70it/s]格式化数据:  20%|█▉        | 827/4217 [00:00<00:01, 2204.02it/s]格式化数据:  25%|██▌       | 1060/4217 [00:00<00:01, 2248.02it/s]格式化数据:  32%|███▏      | 1333/4217 [00:00<00:01, 2409.80it/s]格式化数据:  37%|███▋      | 1574/4217 [00:00<00:01, 2317.06it/s]格式化数据:  44%|████▍     | 1847/4217 [00:00<00:00, 2442.24it/s]格式化数据:  50%|████▉     | 2093/4217 [00:00<00:00, 2401.04it/s]格式化数据:  56%|█████▌    | 2365/4217 [00:01<00:00, 2494.14it/s]格式化数据:  62%|██████▏   | 2616/4217 [00:01<00:00, 2473.27it/s]格式化数据:  68%|██████▊   | 2864/4217 [00:01<00:00, 2379.94it/s]格式化数据:  74%|███████▍  | 3118/4217 [00:01<00:00, 2424.12it/s]格式化数据:  80%|███████▉  | 3362/4217 [00:01<00:00, 2323.71it/s]格式化数据:  85%|████████▌ | 3596/4217 [00:01<00:00, 2310.83it/s]格式化数据:  91%|█████████ | 3831/4217 [00:01<00:00, 2320.27it/s]格式化数据:  97%|█████████▋| 4088/4217 [00:01<00:00, 2389.87it/s]格式化数据: 100%|██████████| 4217/4217 [00:01<00:00, 2290.16it/s]
+
+开始5折交叉验证数据分割...
+总用户数: 3930
+题目数: 26688
+技能数: 150
+
+处理Fold 0...
+  Fold 0完成: 训练样本3144, 测试样本786
+
+处理Fold 1...
+  Fold 1完成: 训练样本3144, 测试样本786
+
+处理Fold 2...
+  Fold 2完成: 训练样本3144, 测试样本786
+
+处理Fold 3...
+  Fold 3完成: 训练样本3144, 测试样本786
+
+处理Fold 4...
+  Fold 4完成: 训练样本3144, 测试样本786
+
+数据预处理完成！

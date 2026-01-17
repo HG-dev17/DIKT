@@ -4,8 +4,8 @@ class Config:
     DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     DATASET = 'assist09'
-    NUM_SKILL = 123
-    NUM_PROBLEM = 15925
+    NUM_SKILL = 150  # 更新为实际数据中的技能数，原123
+    NUM_PROBLEM = 26688  # 更新为实际数据中的题目数，原15925
     BATCH_SIZE = 64
 
     # DATASET = 'assist12_1'

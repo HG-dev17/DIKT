@@ -6,3 +6,5 @@ matplotlib>=3.4.0
 scikit-learn>=1.0.0
 rotary-embedding-torch>=0.2.4
 tqdm>=4.60.0
+chardet>=5.2.0
+EduData>=0.0.18

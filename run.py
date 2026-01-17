@@ -23,7 +23,8 @@ def run_epoch(is_train, path, model, optimizer, batch_size, min_problem_num,
 
     # 会把数据集分为多个batch_size大小的数据（i表示数据的个数）
     # 调用load_data中的getitem方法取data
-    for i, data in tqdm(enumerate(data_loader), desc='加载中...', ncols=100):
+    desc_text = '训练中' if is_train else '验证中'
+    for i, data in tqdm(enumerate(data_loader), desc=desc_text, ncols=100, leave=False):
         use_problem, use_ans, res_mask, use_time = data
 
         if is_train:

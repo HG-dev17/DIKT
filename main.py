@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import pandas as pd
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 import glo
 from model import DIKT
@@ -34,8 +35,13 @@ if __name__ == '__main__':
     avg_auc = 0
     avg_rmse = 0
 
-    for fold in range(5):
-        print(f"Starting fold {fold}...")
+    # Fold进度条
+    fold_pbar = tqdm(range(5), desc='总体进度', ncols=100, position=0)
+    for fold in fold_pbar:
+        fold_pbar.set_description(f'Fold {fold}/4')
+        print(f"\n{'='*80}")
+        print(f"开始训练 Fold {fold}/4")
+        print(f"{'='*80}")
 
         # 读取数据
         mp2path = {
@@ -81,15 +87,19 @@ if __name__ == '__main__':
 
         criterion = nn.BCELoss()
         model = DIKT(pro_max, skill_max, d_model, dropout).to(device)
-        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5, capturable=True)
+        # capturable=True 只在CUDA设备上有效，CPU上会报错
+        optimizer_kwargs = {'lr': learning_rate, 'weight_decay': 1e-5}
+        if device.type == 'cuda':
+            optimizer_kwargs['capturable'] = True
+        optimizer = torch.optim.Adam(model.parameters(), **optimizer_kwargs)
 
         early_stop_counter = 0
-        for epoch in range(epochs):
+        # Epoch进度条
+        epoch_pbar = tqdm(range(epochs), desc=f'Fold {fold} 训练进度', ncols=120, position=1, leave=True)
+        for epoch in epoch_pbar:
 
             train_loss, train_acc, train_auc, train_rmse = run_epoch(True, train_path, model, optimizer,
                                                                      batch_size, min_seq, max_seq, grad_clip, criterion)
-            print(
-                f'epoch: {epoch}, train_loss: {train_loss:.4f}, train_acc: {train_acc:.4f}, train_auc: {train_auc:.4f}, train_rmse: {train_rmse:.4f}')
             res_train_loss.append(train_loss)
             res_train_acc.append(train_acc)
             res_train_auc.append(train_auc)
@@ -97,12 +107,17 @@ if __name__ == '__main__':
 
             test_loss, test_acc, test_auc, test_rmse = run_epoch(False, test_path, model, optimizer,
                                                                  batch_size, min_seq, max_seq, grad_clip, criterion)
-            print(
-                f'epoch: {epoch}, test_loss: {test_loss:.4f}, test_acc: {test_acc:.4f}, test_auc: {test_auc:.4f}, test_rmse: {test_rmse:.4f}')
             res_test_loss.append(test_loss)
             res_test_acc.append(test_acc)
             res_test_auc.append(test_auc)
             res_test_rmse.append(test_rmse)
+
+            # 更新进度条显示
+            epoch_pbar.set_postfix({
+                'Train': f'Loss:{train_loss:.3f} Acc:{train_acc:.3f} AUC:{train_auc:.3f}',
+                'Test': f'Loss:{test_loss:.3f} Acc:{test_acc:.3f} AUC:{test_auc:.3f}',
+                'Best': f'AUC:{best_auc:.3f}'
+            })
 
             if test_auc > best_auc:
                 early_stop_counter = 0
@@ -111,15 +126,27 @@ if __name__ == '__main__':
                 best_acc = test_acc
                 best_rmse = test_rmse
                 # 保存最好的模型
+                import os
+                os.makedirs('output', exist_ok=True)
                 best_model_path = f'./output/best_model_fold_{fold}.pt'
                 torch.save(model.state_dict(), best_model_path)
+                epoch_pbar.set_postfix({
+                    'Train': f'Loss:{train_loss:.3f} Acc:{train_acc:.3f} AUC:{train_auc:.3f}',
+                    'Test': f'Loss:{test_loss:.3f} Acc:{test_acc:.3f} AUC:{test_auc:.3f}',
+                    'Best': f'AUC:{best_auc:.3f} ✓'
+                })
             else:
                 early_stop_counter += 1
 
             if early_stop_counter >= patience:
-                print(
-                    f"Early stopping triggered at epoch {epoch}, BEST_ACC: {best_acc:.4f}, BEST_AUC: {best_auc:.4f}, BEST_RMSE: {best_rmse:.4f}")
+                epoch_pbar.set_postfix({
+                    'Status': 'Early Stop',
+                    'Best': f'ACC:{best_acc:.3f} AUC:{best_auc:.3f} RMSE:{best_rmse:.3f}'
+                })
+                print(f"\n早停触发于 epoch {epoch}, 最佳结果: ACC={best_acc:.4f}, AUC={best_auc:.4f}, RMSE={best_rmse:.4f}")
                 break
+        
+        epoch_pbar.close()
 
         print(f'*******************************************************************************')
         print(
