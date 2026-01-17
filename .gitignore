@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Virtual environments
+.venv
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data and models
+pre_process_data/
+checkpoints/
+logs/
+*.pth
+*.pt
+*.pkl
+*.h5
+*.hdf5
+
+# Logs
+*.log
+tensorboard/
+
+# 临时文件
+temp/
+tmp/
+
+# 配置文件（如果有敏感信息）
+config.ini
+secrets.py
+*.key
+*.pem
+
+# 大文件
+*.zip
+*.tar.gz
+*.rar
+
+# 数据集（通常不跟踪大文件）
+data/
+dataset/
+datasets/
