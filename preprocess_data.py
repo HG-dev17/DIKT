@@ -39,7 +39,8 @@ def load_assist09_data(csv_path):
     df = None
     for encoding in encodings:
         try:
-            df = pd.read_csv(csv_path, low_memory=False, encoding=encoding)
+            # 如果第一列是空字符串或看起来像索引，让pandas自动处理
+            df = pd.read_csv(csv_path, low_memory=False, encoding=encoding, index_col=False)
             print(f"成功使用编码: {encoding}")
             break
         except (UnicodeDecodeError, UnicodeError):
@@ -47,6 +48,11 @@ def load_assist09_data(csv_path):
     
     if df is None:
         raise ValueError("无法读取CSV文件，尝试了多种编码都失败")
+    
+    # 如果第一列是空字符串或Unnamed，删除它
+    if df.columns[0] == '' or 'Unnamed' in df.columns[0] or df.columns[0].startswith('"'):
+        print(f"  检测到第一列为索引列，将删除: {df.columns[0]}")
+        df = df.drop(columns=[df.columns[0]])
     
     # 检查必要的列
     print(f"\n数据列: {df.columns.tolist()}")
@@ -147,11 +153,20 @@ def load_assist09_data(csv_path):
         df['time_sec'] = pd.to_numeric(df[time_col], errors='coerce').fillna(0)
     
     # 按用户和时间排序（保持时间顺序，这对知识追踪很重要）
-    # 如果有sequence_id列，也可以使用它作为辅助排序
+    # 优先使用sequence_id排序（如果存在），因为它通常表示交互的顺序
+    # 然后使用时间作为辅助排序
+    sort_cols = ['user_id']
     if 'sequence_id' in df.columns:
-        df = df.sort_values(['user_id', 'sequence_id', 'time_sec'])
-    else:
-        df = df.sort_values(['user_id', 'time_sec'])
+        # 确保sequence_id是数值类型
+        df['sequence_id'] = pd.to_numeric(df['sequence_id'], errors='coerce').fillna(0)
+        sort_cols.append('sequence_id')
+        print(f"  使用sequence_id进行排序")
+    if 'time_sec' in df.columns:
+        sort_cols.append('time_sec')
+        print(f"  使用time_sec作为辅助排序")
+    
+    df = df.sort_values(sort_cols)
+    print(f"  排序字段: {sort_cols}")
     
     print(f"\n数据统计:")
     print(f"  用户数: {df['user_id'].nunique()}")
@@ -167,11 +182,18 @@ def format_data_for_dikt(df, correct_col):
     user_data = []
     
     for user_id, group in tqdm(df.groupby('user_id'), desc="格式化数据"):
-        # 按时间排序（保持时间顺序），如果没有时间列则按原始顺序
+        # 按sequence_id和时间排序（保持时间顺序）
+        # 优先使用sequence_id，因为它通常表示交互的顺序
+        sort_cols = []
+        if 'sequence_id' in group.columns:
+            sort_cols.append('sequence_id')
         if 'time_sec' in group.columns:
-            group = group.sort_values('time_sec')
+            sort_cols.append('time_sec')
+        
+        if sort_cols:
+            group = group.sort_values(sort_cols)
         else:
-            # 如果没有时间信息，保持原始顺序（按索引）
+            # 如果没有排序信息，保持原始顺序（按索引）
             group = group.sort_index()
         
         problems = group['problem_id'].tolist()
