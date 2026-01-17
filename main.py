@@ -95,9 +95,11 @@ if __name__ == '__main__':
 
         early_stop_counter = 0
         # Epoch进度条
-        epoch_pbar = tqdm(range(epochs), desc=f'Fold {fold} 训练进度', ncols=120, position=1, leave=True)
+        epoch_pbar = tqdm(range(epochs), desc=f'Fold {fold} Epoch进度', ncols=120, position=1, leave=True)
         for epoch in epoch_pbar:
-
+            # 更新epoch进度条，显示当前正在训练
+            epoch_pbar.set_description(f'Fold {fold} Epoch {epoch+1}/{epochs} [训练中]')
+            
             train_loss, train_acc, train_auc, train_rmse = run_epoch(True, train_path, model, optimizer,
                                                                      batch_size, min_seq, max_seq, grad_clip, criterion)
             res_train_loss.append(train_loss)
@@ -105,6 +107,9 @@ if __name__ == '__main__':
             res_train_auc.append(train_auc)
             res_train_rmse.append(train_rmse)
 
+            # 更新epoch进度条，显示当前正在验证
+            epoch_pbar.set_description(f'Fold {fold} Epoch {epoch+1}/{epochs} [验证中]')
+            
             test_loss, test_acc, test_auc, test_rmse = run_epoch(False, test_path, model, optimizer,
                                                                  batch_size, min_seq, max_seq, grad_clip, criterion)
             res_test_loss.append(test_loss)
@@ -113,6 +118,7 @@ if __name__ == '__main__':
             res_test_rmse.append(test_rmse)
 
             # 更新进度条显示
+            epoch_pbar.set_description(f'Fold {fold} Epoch {epoch+1}/{epochs} [完成]')
             epoch_pbar.set_postfix({
                 'Train': f'Loss:{train_loss:.3f} Acc:{train_acc:.3f} AUC:{train_auc:.3f}',
                 'Test': f'Loss:{test_loss:.3f} Acc:{test_acc:.3f} AUC:{test_auc:.3f}',
