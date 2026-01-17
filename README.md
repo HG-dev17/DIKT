@@ -3,9 +3,10 @@
 Interpretable knowledge tracing with dual-level knowledge states
 
 ## 虚拟环境（推荐）
+```bash
 conda create -n dikt python=3.7
 conda activate dikt
-
+```
 ## 项目结构
 ```
 DIKT-master/
