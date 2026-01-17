@@ -30,7 +30,9 @@ def find_csv_file():
     return None
 
 def load_assist09_data(csv_path):
-    """加载ASSISTments 2009数据"""
+    """加载ASSISTments 2009数据
+    返回: (df, correct_col) - 处理后的数据框和correct列名
+    """
     print(f"正在加载数据: {csv_path}")
     # 尝试不同的编码
     encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252', 'gbk', 'gb2312']
@@ -122,6 +124,13 @@ def load_assist09_data(csv_path):
     df[problem_col] = df[problem_col].fillna(-1)
     df[skill_col] = df[skill_col].fillna(-1)
     
+    # 处理skill_id可能是字符串的情况（如"1_13"）
+    # 尝试转换为数值，如果失败则使用分类编码
+    if df[skill_col].dtype == 'object':
+        print(f"  检测到skill_id为字符串格式，将使用分类编码")
+        # 将字符串转换为分类编码
+        df[skill_col] = df[skill_col].astype(str)
+    
     df['user_id'] = pd.Categorical(df[user_col]).codes
     df['problem_id'] = pd.Categorical(df[problem_col]).codes
     df['skill_id'] = pd.Categorical(df[skill_col]).codes
@@ -137,8 +146,12 @@ def load_assist09_data(csv_path):
     else:
         df['time_sec'] = pd.to_numeric(df[time_col], errors='coerce').fillna(0)
     
-    # 排序
-    df = df.sort_values(['user_id', 'problem_id'])
+    # 按用户和时间排序（保持时间顺序，这对知识追踪很重要）
+    # 如果有sequence_id列，也可以使用它作为辅助排序
+    if 'sequence_id' in df.columns:
+        df = df.sort_values(['user_id', 'sequence_id', 'time_sec'])
+    else:
+        df = df.sort_values(['user_id', 'time_sec'])
     
     print(f"\n数据统计:")
     print(f"  用户数: {df['user_id'].nunique()}")
@@ -146,20 +159,25 @@ def load_assist09_data(csv_path):
     print(f"  技能数: {df['skill_id'].nunique()}")
     print(f"  总记录数: {len(df)}")
     
-    return df
+    return df, correct_col
 
-def format_data_for_dikt(df):
+def format_data_for_dikt(df, correct_col):
     """将数据格式化为DIKT所需的格式"""
     # 按用户分组
     user_data = []
     
     for user_id, group in tqdm(df.groupby('user_id'), desc="格式化数据"):
-        # 按problem_id排序（保持时间顺序）
-        group = group.sort_values('problem_id')
+        # 按时间排序（保持时间顺序），如果没有时间列则按原始顺序
+        if 'time_sec' in group.columns:
+            group = group.sort_values('time_sec')
+        else:
+            # 如果没有时间信息，保持原始顺序（按索引）
+            group = group.sort_index()
         
         problems = group['problem_id'].tolist()
         skills = group['skill_id'].tolist()
-        answers = group[df.columns[df.columns.str.contains('correct', case=False)][0]].tolist()
+        # 使用传入的correct_col列名
+        answers = group[correct_col].tolist()
         times = group['time_sec'].tolist()
         
         # 确保所有列表长度一致
@@ -232,13 +250,13 @@ def main():
         raise FileNotFoundError("未找到skill_builder相关的CSV文件，请确保文件在项目目录或data目录下")
     
     # 加载数据
-    df = load_assist09_data(csv_path)
+    df, correct_col = load_assist09_data(csv_path)
     
     # 创建题目-技能映射
     ques_skill = df[['problem_id', 'skill_id']].drop_duplicates()
     
     # 格式化数据
-    user_data = format_data_for_dikt(df)
+    user_data = format_data_for_dikt(df, correct_col)
     
     # 5折交叉验证
     kf = KFold(n_splits=5, shuffle=True, random_state=42)

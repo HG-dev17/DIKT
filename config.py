@@ -51,7 +51,7 @@ class Config:
 
     MIN_SEQ = 3
     MAX_SEQ = 200
-    EPOCHS = 200
+    EPOCHS = 2 #200
     EARLY_STOP = 20
 
 

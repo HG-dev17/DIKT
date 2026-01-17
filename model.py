@@ -45,7 +45,7 @@ class DIKT(nn.Module):
     
     def forward(self, problem, answer, time):
         # problem: [batch_size, seq_len]
-        # answer: [batch_size, seq_len] 
+        # answer: [batch_size, seq_len] - 历史答案序列（用于预测下一个）
         # time: [batch_size, seq_len]
         
         batch_size, seq_len = problem.size()
@@ -57,7 +57,11 @@ class DIKT(nn.Module):
         # 嵌入层
         problem_emb = self.problem_embed(problem)  # [batch_size, seq_len, d_model]
         skill_emb = self.skill_embed(skill_ids)    # [batch_size, seq_len, d_model]
-        answer_emb = self.answer_embed(answer)      # [batch_size, seq_len, d_model]
+        # 使用历史答案（向左shift，第一个位置用0填充）
+        # 这样在位置i，我们使用的是位置i-1的答案来预测位置i
+        answer_shifted = torch.cat([torch.zeros(batch_size, 1, dtype=answer.dtype, device=answer.device), 
+                                    answer[:, :-1]], dim=1)
+        answer_emb = self.answer_embed(answer_shifted)  # [batch_size, seq_len, d_model]
         
         # 时间特征处理
         time = time.unsqueeze(-1).float()  # [batch_size, seq_len, 1]

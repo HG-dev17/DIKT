@@ -37,8 +37,10 @@ def run_epoch(is_train, path, model, optimizer, batch_size, min_problem_num,
             predict = model(use_problem, use_ans, use_time)
 
             # 计算损失
-            # predict、next_ans、mask都是80,199，mask与next_ans一一对应，都是去掉了第一位，并且值为true代表该位置是用户真正的交互数据，而值为false代表该位置是为了统一长度而填充的数据
-            # 经过mask操作之后，把用户真正交互数据挑选出来了，而将为了统一长度填充的数据筛选出去了
+            # 预测是对下一个位置的预测，所以需要shift
+            # predict[i] 预测的是 use_ans[i+1]，所以需要对齐
+            # 使用res_mask来过滤有效位置，但预测和真实值需要正确对齐
+            # 预测位置i对应的是答案位置i（因为模型在位置i使用历史信息预测位置i的答案）
             next_predict = torch.masked_select(predict, res_mask)
             next_true = torch.masked_select(use_ans, res_mask)
             kt_loss = criterion(next_predict, next_true.float())
@@ -66,6 +68,7 @@ def run_epoch(is_train, path, model, optimizer, batch_size, min_problem_num,
             with torch.no_grad():
                 predict = model(use_problem, use_ans, use_time)
 
+                # 预测位置i对应的是答案位置i（因为模型在位置i使用历史信息预测位置i的答案）
                 next_predict = torch.masked_select(predict, res_mask)
                 next_true = torch.masked_select(use_ans, res_mask)
                 kt_loss = criterion(next_predict, next_true.float())
